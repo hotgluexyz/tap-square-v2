@@ -405,5 +405,3 @@ class SubscriptionsStream(squareStream):
             )
         ),
     ).to_dict()
-
-    pass 
