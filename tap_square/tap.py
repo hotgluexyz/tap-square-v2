@@ -36,7 +36,22 @@ class Tapsquare(Tap):
         th.Property(
             'client_id',
             th.StringType,
-            required='true'
+            required='true',
+            description="Square application client id"
+
+        ),
+        th.Property(
+            'client_secret',
+            th.StringType,
+            required='true',
+            description="Square application client secret"
+
+        ),
+        th.Property(
+            'refresh_token',
+            th.StringType, 
+            required=True, 
+            description= "Square account OAuth refresh token"
         )
     ).to_dict()
 
