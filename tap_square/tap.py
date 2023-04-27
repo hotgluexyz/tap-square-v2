@@ -6,6 +6,7 @@ from singer_sdk import Tap
 from singer_sdk import typing as th  # JSON schema typing helpers
 
 from tap_square import streams
+import inspect 
 
 
 class Tapsquare(Tap):
@@ -62,12 +63,8 @@ class Tapsquare(Tap):
             A list of discovered streams.
         """
         return [
-            streams.InvoicesStream(self),
-            streams.PaymentsStream(self),
-            streams.LocationsStream(self),
-            streams.SubscriptionsStream(self),
+           cls(self) for name, cls in inspect.getmembers(streams,inspect.isclass) if cls.__module__ == 'tap_square.streams'
         ]
-
 
 if __name__ == "__main__":
     Tapsquare.cli()
