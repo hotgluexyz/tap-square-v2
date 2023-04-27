@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from singer_sdk.authenticators import OAuthAuthenticator, SingletonMeta
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # The SingletonMeta metaclass makes your streams reuse the same authenticator instance.
 # If this behaviour interferes with your use-case, you can remove the metaclass.
@@ -29,9 +29,9 @@ class squareAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
 
 
     def is_token_valid(self):
-        access_token = self._tap._config.get("access_token")
+        access_token = self.config.get("access_token")
         now = round(datetime.utcnow().timestamp())
-        day_hours = datetime.timedelta(hours=24)
+        day_hours = timedelta(hours=24)
         
         return not bool(
             (not access_token) or (not self.config['short_lived']) or ((self.last_refreshed - now) < day_hours)

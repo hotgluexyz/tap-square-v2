@@ -53,6 +53,13 @@ class Tapsquare(Tap):
             th.StringType, 
             required=True, 
             description= "Square account OAuth refresh token"
+        ),
+        th.Property(
+            'short_lived',
+            th.BooleanType, 
+            required=True, 
+            description= "Square account OAuth refresh token",
+            default=True
         )
     ).to_dict()
 
