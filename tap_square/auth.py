@@ -49,8 +49,13 @@ class squareAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
         Returns:
             A new authenticator.
         """
+        if stream.config.get('is_sandbox'):
+            base_endpoint = 'https://connect.squareupsandbox.com'
+        else: 
+            base_endpoint = "https://connect.squareup.com"
+        
         return cls(
             stream=stream,
-            auth_endpoint=f"https://connect.squareupsandbox.com/oauth2/token",
+            auth_endpoint=f"{base_endpoint}/oauth2/token",
             oauth_scopes=["INVOICES_READ","SUBSCRIPTIONS_READ","PAYMENTS_READ"],
         )

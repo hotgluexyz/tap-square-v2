@@ -60,6 +60,11 @@ class Tapsquare(Tap):
             required=True, 
             description= "Square account OAuth refresh token",
             default=True
+        ),
+        th.Property(
+            'is_sandbox', 
+            th.BooleanType,
+            default=False
         )
     ).to_dict()
 
