@@ -98,8 +98,9 @@ class squareStream(RESTStream):
         """
         params: dict = {}
         ## PAGINATION
-        if next_page_token:
+        if next_page_token and self.rest_method == 'GET':
             params["cursor"] = next_page_token
+            
         if self.replication_key:
             params["sort"] = "asc"
             params["order_by"] = self.replication_key
@@ -121,8 +122,11 @@ class squareStream(RESTStream):
         Returns:
             A dictionary with the JSON body for a POST requests.
         """
-        # TODO: Delete this method if no payload is required. (Most REST APIs.)
-        return None
+        payload = dict()
+        if self.rest_method == 'POST':
+            if next_page_token:
+                payload['cursor'] = next_page_token
+        return payload
 
     def parse_response(self, response: requests.Response) -> Iterable[dict]:
         """Parse the response and return an iterator of result records.
