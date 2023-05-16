@@ -17,11 +17,6 @@ class Tapsquare(Tap):
     # TODO: Update this section with the actual config values you expect:
     config_jsonschema = th.PropertiesList(
         th.Property(
-            "start_date",
-            th.DateTimeType,
-            description="The earliest record date to sync",
-        ),
-        th.Property(
             "api_url",
             th.StringType,
             default="https://connect.squareupsandbox.com",
@@ -37,7 +32,7 @@ class Tapsquare(Tap):
         th.Property(
             'client_secret',
             th.StringType,
-            required='true',
+            required=True,
             description="Square application client secret"
 
         ),
