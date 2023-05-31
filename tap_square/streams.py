@@ -307,30 +307,31 @@ class InvoicesStream(squareStream):
             )
         ),
         th.Property(
-            'payment_requests',
-            th.ObjectType(
-                th.Property('request_type',th.StringType),
-                th.Property('due_date',th.DateTimeType),
-                th.Property('fixed_amount_requested_money',money_type),
-                th.Property('percentage_required',th.StringType),
-                th.Property('tipping_enabled',th.BooleanType),
-                th.Property('automatic_payment_source',th.StringType),
-                th.Property('card_id',th.StringType),
-                th.Property(
-                    'reminders',
-                    th.ArrayType(
-                        th.ObjectType(
-                            th.Property('uid',th.StringType),
-                            th.Property('relative_scheduled_days',th.IntegerType),
-                            th.Property('message',th.StringType),
-                            th.Property('status',th.StringType),
-                            th.Property('sent_at',th.DateTimeType),
+            'payment_requests', th.ArrayType(
+                th.ObjectType(
+                    th.Property('request_type',th.StringType),
+                    th.Property('due_date',th.DateTimeType),
+                    th.Property('fixed_amount_requested_money',money_type),
+                    th.Property('percentage_required',th.StringType),
+                    th.Property('tipping_enabled',th.BooleanType),
+                    th.Property('automatic_payment_source',th.StringType),
+                    th.Property('card_id',th.StringType),
+                    th.Property(
+                        'reminders',
+                        th.ArrayType(
+                            th.ObjectType(
+                                th.Property('uid',th.StringType),
+                                th.Property('relative_scheduled_days',th.IntegerType),
+                                th.Property('message',th.StringType),
+                                th.Property('status',th.StringType),
+                                th.Property('sent_at',th.DateTimeType),
+                            )
                         )
-                    )
-                ),
-                th.Property('computed_amount_money',money_type),
-                th.Property('total_completed_amount_money',money_type),
-                th.Property('rounding_adjustment_included_money',money_type),
+                    ),
+                    th.Property('computed_amount_money',money_type),
+                    th.Property('total_completed_amount_money',money_type),
+                    th.Property('rounding_adjustment_included_money',money_type),
+                )
             )
         ),
         th.Property('delivery_method',th.StringType),

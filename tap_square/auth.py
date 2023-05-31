@@ -31,10 +31,10 @@ class squareAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
     def is_token_valid(self):
         access_token = self.config.get("access_token")
         now = round(datetime.utcnow().timestamp())
-        day_hours = timedelta(hours=24)
-        
+        expires_in = self.config.get("expires_in")
+
         return not bool(
-            (not access_token) or (not self.config['short_lived']) or ((self.last_refreshed - now) < day_hours)
+            (not access_token) or (not self.config['short_lived']) or (not self.config.get("expires_in")) or (not self.last_refreshed) or ((expires_in - now) < 120)
         )
 
 
