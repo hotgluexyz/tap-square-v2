@@ -40,6 +40,7 @@ class PaymentsStream(squareStream):
     path = '/v2/payments'
     primary_keys = ["id"]
     records_jsonpath = "$.payments[*]"
+    replication_key = "created_at"
 
     schema = th.PropertiesList(
        th.Property('id',th.StringType),

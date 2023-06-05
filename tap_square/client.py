@@ -11,6 +11,7 @@ from singer_sdk.helpers.jsonpath import extract_jsonpath
 from singer_sdk.streams import RESTStream
 
 from tap_square.auth import squareAuthenticator
+from pendulum import parse
 
 if sys.version_info >= (3, 8):
     from functools import cached_property
@@ -82,6 +83,13 @@ class squareStream(RESTStream):
 
         return next_page_token
 
+    def get_starting_time(self, context):
+        start_date = self.config.get("start_date")
+        if start_date:
+            start_date = parse(self.config.get("start_date"))
+        rep_key = self.get_starting_timestamp(context)
+        return rep_key or start_date
+    
     def get_url_params(
         self,
         context: dict | None,
@@ -100,10 +108,11 @@ class squareStream(RESTStream):
         ## PAGINATION
         if next_page_token and self.rest_method == 'GET':
             params["cursor"] = next_page_token
-            
-        if self.replication_key:
-            params["sort"] = "asc"
-            params["order_by"] = self.replication_key
+        
+        start_date = self.get_starting_time(context)
+        if self.replication_key and start_date:
+            start_date = start_date.strftime('%Y-%m-%dT%H:%M:%S.%f')
+            params["begin_time"] = start_date
         return params
 
     def prepare_request_payload(
