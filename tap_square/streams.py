@@ -7,12 +7,9 @@ from pathlib import Path
 from singer_sdk import typing as th  # JSON Schema typing helpers
 
 from tap_square.client import squareStream
-
-# TODO: Delete this is if not using json files for schema definition
-SCHEMAS_DIR = Path(__file__).parent / Path("./schemas")
-# TODO: - Override `UsersStream` and `GroupsStream` with your own stream definition.
-#       - Copy-paste as many times as needed to create multiple stream types.
-
+from typing import Any, Dict, Optional, Union, List, Iterable
+import requests
+from datetime import datetime, timedelta
 address_type = th.ObjectType(
                         th.Property('address_line_1', th.StringType),
                         th.Property('address_line_2', th.StringType),
@@ -406,4 +403,310 @@ class SubscriptionsStream(squareStream):
                 th.Property('name',th.StringType)
             )
         ),
+    ).to_dict()
+
+class OrdersStream(squareStream):
+    name = "orders"
+    path = "/v2/orders/search"
+    primary_keys = ["id"]
+    rest_method = "POST"
+    records_jsonpath = "$.orders[*]"
+    parent_stream_type = LocationsStream
+    replication_key = "updated_at"
+
+    schema = th.PropertiesList(
+        th.Property("id", th.StringType),
+        th.Property("location_id", th.StringType),
+        th.Property("line_items", th.ArrayType(
+            th.ObjectType(
+                th.Property("uid", th.StringType),
+                th.Property("catalog_object_id", th.StringType),
+                th.Property("catalog_version", th.NumberType),
+                th.Property("quantity", th.StringType),
+                th.Property("name", th.StringType),
+                th.Property("variation_name", th.StringType),
+                th.Property("base_price_money", th.ObjectType(
+                    th.Property("amount", th.IntegerType),
+                    th.Property("currency", th.StringType)
+                )),
+                th.Property("gross_sales_money", th.ObjectType(
+                    th.Property("amount", th.IntegerType),
+                    th.Property("currency", th.StringType)
+                )),
+                th.Property("total_tax_money", th.ObjectType(
+                    th.Property("amount", th.IntegerType),
+                    th.Property("currency", th.StringType)
+                )),
+                th.Property("total_discount_money", th.ObjectType(
+                    th.Property("amount", th.IntegerType),
+                    th.Property("currency", th.StringType)
+                )),
+                th.Property("total_money", th.ObjectType(
+                    th.Property("amount", th.IntegerType),
+                    th.Property("currency", th.StringType)
+                )),
+                th.Property("variation_total_price_money", th.ObjectType(
+                    th.Property("amount", th.IntegerType),
+                    th.Property("currency", th.StringType)
+                )),
+                th.Property("item_type", th.StringType)
+                
+            )
+        )),
+        th.Property("created_at", th.DateTimeType),
+        th.Property("updated_at", th.DateTimeType),
+        th.Property("state", th.StringType),
+        th.Property("version", th.IntegerType),
+        th.Property("total_tax_money", th.ObjectType(
+            th.Property("amount", th.IntegerType),
+            th.Property("currency", th.StringType)
+        )),
+        th.Property("total_discount_money", th.ObjectType(
+            th.Property("amount", th.IntegerType),
+            th.Property("currency", th.StringType)
+        )),
+        th.Property("total_tip_money", th.ObjectType(
+            th.Property("amount", th.IntegerType),
+            th.Property("currency", th.StringType)
+        )),
+        th.Property("total_money", th.ObjectType(
+            th.Property("amount", th.IntegerType),
+            th.Property("currency", th.StringType)
+        )),
+        th.Property("closed_at", th.StringType),
+        th.Property("tenders", th.ArrayType(
+            th.ObjectType(
+                th.Property("id", th.StringType),
+                th.Property("location_id", th.StringType),
+                th.Property("transaction_id", th.StringType),
+                th.Property("created_at", th.StringType),
+                th.Property("amount_money", th.ObjectType(
+                    th.Property("amount", th.IntegerType),
+                    th.Property("currency", th.StringType)
+                )),
+                th.Property("type", th.StringType),
+                th.Property("card_details", th.ObjectType(
+                    th.Property("status", th.StringType),
+                    th.Property("card", th.ObjectType(
+                        th.Property("card_brand", th.StringType),
+                        th.Property("last_4", th.StringType),
+                        th.Property("fingerprint", th.StringType),
+                    )),
+                    th.Property("entry_method", th.StringType),
+                )),
+                th.Property("payment_id", th.StringType),
+                
+            )),
+
+        ),
+        th.Property("total_service_charge_money", th.ObjectType(
+            th.Property("amount", th.IntegerType),
+            th.Property("currency", th.StringType),
+        )),
+        th.Property("net_amounts", th.ObjectType(
+            th.Property("total_money", th.ObjectType(
+                th.Property("amount", th.IntegerType),
+                th.Property("currency", th.StringType)
+            )),
+            th.Property("tax_money", th.ObjectType(
+                th.Property("amount", th.IntegerType),
+                th.Property("currency", th.StringType)
+            )),
+            th.Property("discount_money", th.ObjectType(
+                th.Property("amount", th.IntegerType),
+                th.Property("currency", th.StringType)
+            )),
+            th.Property("trip_money", th.ObjectType(
+                th.Property("amount", th.IntegerType),
+                th.Property("currency", th.StringType)
+            )),
+            th.Property("service_charge_money", th.ObjectType(
+                th.Property("amount", th.IntegerType),
+                th.Property("currency", th.StringType)
+            )),
+
+        )),
+        th.Property("source", th.ObjectType(
+            th.Property("name", th.StringType)
+        )),
+        th.Property("customer_id", th.StringType),
+
+
+    ).to_dict()
+
+    def get_next_page_token(
+        self, response: requests.Response, previous_token: Optional[Any]
+    ) -> Optional[Any]:
+        """Return a token for identifying next page or None if no more pages."""
+        return response.json().get("cursor")
+
+    def prepare_request_payload(
+            self, context: Optional[dict], next_page_token: Optional[Any]
+        ) -> Optional[dict]:
+            start_date = self.get_starting_timestamp(context)
+            start_date_f = start_date.strftime("%Y-%m-%dT00:00:00")
+            end_date_f = datetime.now().strftime("%Y-%m-%dT23:59:59")
+            body = {
+                "location_ids": [context.get("location")],
+                "limit" : 500,
+                "cursor" : next_page_token
+            }
+            #Apply replication logic
+            if start_date:
+                 body.update({
+                      "query":{
+                           "filter": {
+                            "date_time_filter": {
+                                "updated_at": {
+                                    "start_at": start_date_f,
+                                    "end_at": end_date_f
+                                }
+                            }
+                            },
+                            "sort": {
+                                "sort_field": "UPDATED_AT",
+                                "sort_order": "DESC"
+                            }
+                      }
+                 })
+            return body
+
+class CatalogStream(squareStream):
+
+    name = "catalogs"
+    path = "/v2/catalog/list"
+    primary_keys = ["id"]
+    
+    schema = th.PropertiesList(
+        th.Property("type", th.StringType),
+        th.Property("id", th.StringType),
+        th.Property("updated_at", th.DateTimeType),
+        th.Property("created_at", th.DateTimeType),
+        th.Property("version", th.NumberType),
+        th.Property("is_deleted", th.BooleanType),
+        th.Property("custom_attribute_values", th.CustomType({"type": ["object", "string","null"]})), # this key value will change, so taking generic
+        th.Property("present_at_all_locations", th.BooleanType),
+        th.Property("present_at_location_ids", th.ArrayType(th.StringType)),
+        th.Property("category_data", th.CustomType({"type": ["object", "string"]})),
+        th.Property("item_data", th.ObjectType(
+            th.Property("name", th.StringType),
+            th.Property("description", th.StringType),
+            th.Property("visibility", th.StringType ),
+            th.Property("vategory_id", th.StringType ),
+            th.Property("variations", th.ArrayType(
+                th.ObjectType(
+                    th.Property("type", th.StringType),
+                    th.Property("id", th.StringType),
+                    th.Property("updated_at", th.DateTimeType),
+                    th.Property("created_at", th.DateTimeType),
+                    th.Property("version", th.NumberType),
+                    th.Property("is_deleted", th.BooleanType),
+                    th.Property("present_at_all_locations", th.BooleanType),
+                    th.Property("present_at_location_ids", th.ArrayType(th.StringType)),
+                    th.Property("item_variation_data", th.ObjectType(
+                        th.Property("item_id", th.StringType),
+                        th.Property("name", th.StringType),
+                        th.Property("sku", th.StringType),
+                        th.Property("ordinal", th.IntegerType),
+                        th.Property("pricing_type", th.StringType),
+                        th.Property("price_money", th.ObjectType(
+                            th.Property("amount", th.NumberType),
+                            th.Property("currency", th.StringType),
+                        )),
+                        th.Property("location_overrides", th.ArrayType(
+                            th.ObjectType(
+                                th.Property("location_id", th.StringType),
+                                th.Property("track_inventory", th.BooleanType),
+                            ),
+                        )),
+                        th.Property("sellable", th.BooleanType),
+                        th.Property("stockable", th.BooleanType),
+                    )),
+                )
+            )),
+            th.Property("product_type", th.StringType),
+            th.Property("skip_modifier_screen", th.BooleanType,),
+            th.Property("ecom_visibility", th.StringType),
+            th.Property("image_ids", th.ArrayType(th.StringType))
+
+        ))
+    ).to_dict()
+    def get_child_context(self, record: dict, context: Optional[dict]) -> dict:
+        """Return a context dictionary for child streams."""
+        variations = []
+        if record.get("item_data"):
+            for variation in record['item_data'].get("variations"):
+                variations.append({"id":variation['id']})
+        if variations:        
+            return {"item_data":variations}
+        else:
+            return None  
+
+class CatalogItemVariationsStream(squareStream):
+
+    name = "catalog_item_variations"
+    path = None
+    primary_keys = ["id"]
+    parent_stream_type = CatalogStream
+    prevous_items = []
+    schema = th.PropertiesList(
+        th.Property("id", th.StringType),
+    ).to_dict()
+    def get_child_context(self, record: dict, context: Optional[dict]) -> dict:
+        """Return a context dictionary for child streams."""
+        return  {"catalog_object_id":record["id"]}
+    def get_records(self, context: Optional[dict]) -> Iterable[Dict[str, Any]]:
+        records = None
+        if context.get("item_data"):
+            records = context['item_data']
+        for record in records:
+            transformed_record = self.post_process(record, context)
+            if transformed_record['id'] in self.prevous_items:
+                return None
+            if transformed_record is None:
+                # Record filtered out during post_process()
+                continue
+            self.prevous_items.append(transformed_record['id'])
+            yield transformed_record.copy()
+class CatalogItemVariationCountsStream(squareStream):
+
+    name = "catalog_item_variation_counts"
+    path = "/v2/inventory/{catalog_object_id}"
+    primary_keys = ["id"]
+    parent_stream_type = CatalogItemVariationsStream
+    records_jsonpath = "$.counts[*]"
+    
+    schema = th.PropertiesList(
+        th.Property("catalog_object_id", th.StringType),
+        th.Property("id", th.StringType),
+        th.Property("catalog_object_type", th.StringType),
+        th.Property("state", th.DateTimeType),
+        th.Property("location_id", th.DateTimeType),
+        th.Property("quantity", th.StringType),
+        th.Property("calculated_at", th.DateTimeType),
+    ).to_dict()   
+
+class CustomersStream(squareStream):
+    name = "customers"
+    path = "/v2/customers"
+    records_jsonpath="$.customers[*]"
+    primary_keys=["id"]
+    replication_key = None 
+    
+
+    schema = th.PropertiesList(
+        th.Property('id',th.StringType),
+        th.Property('created_at',th.DateTimeType),
+        th.Property('updated_at',th.DateTimeType),
+        th.Property('given_name',th.StringType),
+        th.Property('email_address',th.StringType),
+        th.Property("address", th.CustomType({"type": ["object", "string"]})),
+        th.Property('phone_number',th.StringType),
+        th.Property('reference_id',th.StringType),
+        th.Property('note',th.StringType),
+        th.Property('creation_source',th.StringType),
+        th.Property("preferences", th.CustomType({"type": ["object", "string"]})),
+        th.Property("group_ids", th.CustomType({"type": ["array", "string"]})),
+        th.Property("segment_ids", th.CustomType({"type": ["array", "string"]})),
+        th.Property('version',th.NumberType),
     ).to_dict()
