@@ -6,12 +6,31 @@ from singer_sdk import Tap
 from singer_sdk import typing as th  # JSON schema typing helpers
 
 from tap_square import streams
+from typing import TYPE_CHECKING, Any, Callable, Iterable, Sequence, cast
+from singer_sdk._singerlib import Catalog
 import inspect 
+if TYPE_CHECKING:
+    from pathlib import PurePath
 
+    from singer_sdk.streams import SQLStream, Stream
 
 class Tapsquare(Tap):
     """square tap class."""
-
+    def __init__(
+        self,
+        *,
+        config: dict | PurePath | str | list[PurePath | str] | None = None,
+        catalog: PurePath | str | dict | Catalog | None = None,
+        state: PurePath | str | dict | None = None,
+        parse_env_config: bool = False,
+        validate_config: bool = True,
+    ) -> None:
+        self.config_file = config[0]
+        super().__init__(
+            config=config,
+            parse_env_config=parse_env_config,
+            validate_config=validate_config,
+        )
     name = "tap-square"
 
     # TODO: Update this section with the actual config values you expect:

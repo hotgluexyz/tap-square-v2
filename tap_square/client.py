@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Any, Callable, Iterable
+from typing import Any, Callable, Iterable, Optional
 
 import requests
 from singer_sdk.helpers.jsonpath import extract_jsonpath
@@ -20,6 +20,7 @@ else:
 
 _Auth = Callable[[requests.PreparedRequest], requests.PreparedRequest]
 SCHEMAS_DIR = Path(__file__).parent / Path("./schemas")
+from singer_sdk.authenticators import BearerTokenAuthenticator
 
 
 class squareStream(RESTStream):
@@ -34,14 +35,19 @@ class squareStream(RESTStream):
     records_jsonpath = "$[*]"  # Or override `parse_response`.
     next_page_token_jsonpath = "$.cursor"  # Or override `get_next_page_token`.
 
+    
     @cached_property
-    def authenticator(self) -> _Auth:
+    def authenticator(self) -> squareAuthenticator:
         """Return a new authenticator object.
 
         Returns:
             An authenticator instance.
         """
-        return squareAuthenticator.create_for_stream(self)
+        if self.config.get('is_sandbox'):
+            base_endpoint = 'https://connect.squareupsandbox.com'
+        else: 
+            base_endpoint = "https://connect.squareup.com"
+        return squareAuthenticator(self, self._tap.config,f"{base_endpoint}/oauth2/token")
 
     @property
     def http_headers(self) -> dict:
@@ -56,27 +62,16 @@ class squareStream(RESTStream):
         return headers
 
     def get_next_page_token(
-        self,
-        response: requests.Response,
-        previous_token: Any | None,
-    ) -> Any | None:
-        """Return a token for identifying next page or None if no more pages.
-
-        Args:
-            response: The HTTP ``requests.Response`` object.
-            previous_token: The previous page token value.
-
-        Returns:
-            The next pagination token.
-        """
-        # TODO: If pagination is required, return a token which can be used to get the
-        #       next page. If this is the final page, return "None" to end the
-        #       pagination loop.
+        self, response: requests.Response, previous_token: Optional[Any]
+    ) -> Any:
+        
         if self.next_page_token_jsonpath:
             all_matches = extract_jsonpath(
                 self.next_page_token_jsonpath, response.json()
             )
             first_match = next(iter(all_matches), None)
+            if first_match == previous_token:
+                return None
             next_page_token = first_match
         else:
             next_page_token = response.headers.get("X-Next-Page", None)
@@ -120,45 +115,11 @@ class squareStream(RESTStream):
         context: dict | None,
         next_page_token: Any | None,
     ) -> dict | None:
-        """Prepare the data payload for the REST API request.
-
-        By default, no payload will be sent (return None).
-
-        Args:
-            context: The stream context.
-            next_page_token: The next page index or value.
-
-        Returns:
-            A dictionary with the JSON body for a POST requests.
+        """Prepare the data payload for the REST API request
         """
-        payload = dict()
+        payload = None
         if self.rest_method == 'POST':
+            payload = dict()
             if next_page_token:
                 payload['cursor'] = next_page_token
         return payload
-
-    def parse_response(self, response: requests.Response) -> Iterable[dict]:
-        """Parse the response and return an iterator of result records.
-
-        Args:
-            response: The HTTP ``requests.Response`` object.
-
-        Yields:
-            Each record from the source.
-        """
-        # TODO: Parse response body and return a set of records.
-    
-        yield from extract_jsonpath(self.records_jsonpath, input=response.json())
-
-    def post_process(self, row: dict, context: dict | None = None) -> dict | None:
-        """As needed, append or transform raw data to match expected structure.
-
-        Args:
-            row: An individual record from the stream.
-            context: The stream context.
-
-        Returns:
-            The updated record dictionary, or ``None`` to skip the record.
-        """
-        # TODO: Delete this method if not needed.
-        return row
