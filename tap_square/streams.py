@@ -591,6 +591,7 @@ class CatalogStream(squareStream):
     name = "catalogs"
     path = "/v2/catalog/list"
     primary_keys = ["id"]
+    records_jsonpath = "$.objects[*]" 
     
     schema = th.PropertiesList(
         th.Property("type", th.StringType),
