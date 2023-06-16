@@ -417,12 +417,23 @@ class OrdersStream(squareStream):
     schema = th.PropertiesList(
         th.Property("id", th.StringType),
         th.Property("location_id", th.StringType),
+        th.Property("reference_id", th.StringType),
         th.Property("line_items", th.ArrayType(
             th.ObjectType(
                 th.Property("uid", th.StringType),
                 th.Property("catalog_object_id", th.StringType),
                 th.Property("catalog_version", th.NumberType),
                 th.Property("quantity", th.StringType),
+                th.Property("quantity_unit", th.ObjectType(
+                    th.Property("custom_unit", th.CustomType({"type": ["object", "string"]})),
+                    th.Property("precision", th.IntegerType),
+                    th.Property("catalog_object_id", th.StringType),
+                    th.Property("catalog_version", th.IntegerType)
+                )),
+                th.Property("note", th.StringType),
+                th.Property("applied_taxes", th.CustomType({"type": ["object", "string"]})),
+                th.Property("applied_discounts", th.CustomType({"type": ["object", "string"]})),
+                th.Property("applied_service_charges", th.CustomType({"type": ["object", "string"]})),
                 th.Property("name", th.StringType),
                 th.Property("variation_name", th.StringType),
                 th.Property("base_price_money", th.ObjectType(
@@ -500,6 +511,10 @@ class OrdersStream(squareStream):
 
         ),
         th.Property("total_service_charge_money", th.ObjectType(
+            th.Property("amount", th.IntegerType),
+            th.Property("currency", th.StringType),
+        )),
+        th.Property("net_amount_due_money", th.ObjectType(
             th.Property("amount", th.IntegerType),
             th.Property("currency", th.StringType),
         )),
@@ -588,6 +603,16 @@ class CatalogStream(squareStream):
         th.Property("present_at_all_locations", th.BooleanType),
         th.Property("present_at_location_ids", th.ArrayType(th.StringType)),
         th.Property("category_data", th.CustomType({"type": ["object", "string"]})),
+        th.Property("item_variation_data", th.CustomType({"type": ["object", "string"]})),
+        th.Property("tax_data", th.CustomType({"type": ["object", "string"]})),
+        th.Property("discount_data", th.CustomType({"type": ["object", "string"]})),
+        th.Property("modifier_list_data", th.CustomType({"type": ["object", "string"]})),
+        th.Property("modifier_list_data", th.CustomType({"type": ["object", "string"]})),
+        th.Property("product_set_data", th.CustomType({"type": ["object", "string"]})),
+        th.Property("pricing_rule_data", th.CustomType({"type": ["object", "string"]})),
+        th.Property("image_data", th.CustomType({"type": ["object", "string"]})),
+        th.Property("measurement_unit_data", th.CustomType({"type": ["object", "string"]})),
+        th.Property("item_option_data", th.CustomType({"type": ["object", "string"]})),
         th.Property("item_data", th.ObjectType(
             th.Property("name", th.StringType),
             th.Property("description", th.StringType),
@@ -684,6 +709,7 @@ class CatalogItemVariationCountsStream(squareStream):
         th.Property("location_id", th.DateTimeType),
         th.Property("quantity", th.StringType),
         th.Property("calculated_at", th.DateTimeType),
+        th.Property("is_estimated", th.BooleanType),
     ).to_dict()   
 
 class CustomersStream(squareStream):
@@ -710,3 +736,41 @@ class CustomersStream(squareStream):
         th.Property("segment_ids", th.CustomType({"type": ["array", "string"]})),
         th.Property('version',th.NumberType),
     ).to_dict()
+
+
+class VendorsStream(squareStream):
+    """Define custom stream."""
+    name = "vendors"
+    path = "/v2/vendors/search"
+    primary_keys = ["id"]
+    rest_method = "POST"
+    records_jsonpath = "$.vendors[*]"
+    replication_key = None
+    schema = th.PropertiesList(
+        th.Property("id", th.StringType),
+        th.Property("name", th.StringType),
+        th.Property("created_at", th.DateTimeType),
+        th.Property("updated_at", th.DateTimeType),
+        th.Property("address", th.CustomType({"type": ["object", "string"]})),
+        th.Property("contacts", th.CustomType({"type": ["object", "string"]})),
+        th.Property("account_number", th.StringType),
+        th.Property("note", th.StringType),
+        th.Property("version", th.NumberType),
+        th.Property("status", th.StringType),
+    ).to_dict()
+    def prepare_request_payload(
+            self, context: Optional[dict], next_page_token: Optional[Any]
+        ) -> Optional[dict]:
+            body = {
+                "filter":{
+                     "status": [
+                        "ACTIVE", "INACTIVE"
+                    ],
+                },
+                "sort" : {
+                    "field":"CREATED_AT",
+                    "order":"ASC"
+                },
+                "cursor" : next_page_token
+            }
+            return body
