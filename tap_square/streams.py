@@ -432,7 +432,7 @@ class OrdersStream(squareStream):
                 )),
                 th.Property("note", th.StringType),
                 th.Property("applied_taxes", th.CustomType({"type": ["object", "string"]})),
-                th.Property("applied_discounts", th.CustomType({"type": ["object", "string"]})),
+                th.Property("applied_discounts", th.CustomType({"type": ["array", "object", "string"]})),
                 th.Property("applied_service_charges", th.CustomType({"type": ["object", "string"]})),
                 th.Property("name", th.StringType),
                 th.Property("variation_name", th.StringType),
@@ -545,7 +545,7 @@ class OrdersStream(squareStream):
             th.Property("name", th.StringType)
         )),
         th.Property("customer_id", th.StringType),
-
+        th.Property("fulfillments", th.CustomType({"type": ["array","object", "string"]}))
 
     ).to_dict()
 
@@ -591,6 +591,7 @@ class CatalogStream(squareStream):
     name = "catalogs"
     path = "/v2/catalog/list"
     primary_keys = ["id"]
+    records_jsonpath = "$.objects[*]"
     
     schema = th.PropertiesList(
         th.Property("type", th.StringType),
