@@ -47,7 +47,7 @@ class squareStream(RESTStream):
             base_endpoint = 'https://connect.squareupsandbox.com'
         else: 
             base_endpoint = "https://connect.squareup.com"
-        return squareAuthenticator(self, self._tap.config,f"{base_endpoint}/oauth2/token")
+        return squareAuthenticator(self, f"{base_endpoint}/oauth2/token")
 
     @property
     def http_headers(self) -> dict:

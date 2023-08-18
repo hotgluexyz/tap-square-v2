@@ -25,12 +25,15 @@ class Tapsquare(Tap):
         parse_env_config: bool = False,
         validate_config: bool = True,
     ) -> None:
-        self.config_file = config[0]
         super().__init__(
             config=config,
+            catalog=catalog,
+            state=state,
             parse_env_config=parse_env_config,
             validate_config=validate_config,
         )
+        self.config_file = config[0]
+
     name = "tap-square"
 
     # TODO: Update this section with the actual config values you expect:
