@@ -815,3 +815,18 @@ class PayoutsStream(squareStream):
         th.Property("end_to_end_id", th.StringType),
     ).to_dict()
 
+class InventoryStream(squareStream):
+    name = "inventory"
+    path = "/v2/inventory/counts/batch-retrieve"
+    rest_method = "POST"
+    primary_keys = ["catalog_object_id"]
+    records_jsonpath = "$.counts[*]"
+    replication_key = None
+    schema = th.PropertiesList(
+        th.Property("catalog_object_id", th.StringType),
+        th.Property("catalog_object_type", th.StringType),
+        th.Property("state", th.StringType),
+        th.Property("location_id", th.StringType),
+        th.Property("quantity", th.StringType),
+        th.Property("calculated_at", th.DateTimeType),
+    ).to_dict()
