@@ -40,29 +40,29 @@ class PaymentsStream(squareStream):
     replication_key = "created_at"
 
     schema = th.PropertiesList(
-       th.Property('id',th.StringType),
-       th.Property('created_at',th.DateTimeType),
-       th.Property('updated_at',th.DateTimeType),
-       th.Property('amount_money',money_type),
-       th.Property('tip_money',money_type),
-       th.Property('total_money',money_type),
-       th.Property('app_fee_money',money_type),
-       th.Property('approved_money',money_type),
-       th.Property(
+        th.Property('id',th.StringType),
+        th.Property('created_at',th.DateTimeType),
+        th.Property('updated_at',th.DateTimeType),
+        th.Property('amount_money',money_type),
+        th.Property('tip_money',money_type),
+        th.Property('total_money',money_type),
+        th.Property('app_fee_money',money_type),
+        th.Property('approved_money',money_type),
+        th.Property(
             'processing_fee',
             th.ObjectType(
                 th.Property('effective_at',th.DateTimeType),
                 th.Property('type',th.StringType),
                 th.Property('amount_money',money_type)
             )
-       ),
-       th.Property('refunded_money',money_type),
-       th.Property('status',th.StringType),
-       th.Property('delay_duration',th.StringType),
-       th.Property('delay_action',th.StringType),
-       th.Property('delayed_until',th.StringType),
-       th.Property('source_type',th.StringType),
-       th.Property(
+        ),
+        th.Property('refunded_money',money_type),
+        th.Property('status',th.StringType),
+        th.Property('delay_duration',th.StringType),
+        th.Property('delay_action',th.StringType),
+        th.Property('delayed_until',th.StringType),
+        th.Property('source_type',th.StringType),
+        th.Property(
             'card_details',
             th.ObjectType(
                 th.Property('status',th.StringType),
@@ -105,8 +105,8 @@ class PaymentsStream(squareStream):
                 ),
                 th.Property('refund_requires_card_presence',th.BooleanType)
             ),
-       ),
-       th.Property(
+        ),
+        th.Property(
             'cash_details',
             th.ObjectType(
                 th.Property('buyer_supplied_money',money_type),
@@ -568,9 +568,9 @@ class OrdersStream(squareStream):
             }
             #Apply replication logic
             if start_date:
-                 body.update({
-                      "query":{
-                           "filter": {
+                body.update({
+                    "query":{
+                        "filter": {
                             "date_time_filter": {
                                 "updated_at": {
                                     "start_at": start_date_f,
@@ -582,8 +582,8 @@ class OrdersStream(squareStream):
                                 "sort_field": "UPDATED_AT",
                                 "sort_order": "DESC"
                             }
-                      }
-                 })
+                    }
+                })
             return body
 
 class CatalogStream(squareStream):
@@ -764,7 +764,7 @@ class VendorsStream(squareStream):
         ) -> Optional[dict]:
             body = {
                 "filter":{
-                     "status": [
+                    "status": [
                         "ACTIVE", "INACTIVE"
                     ],
                 },
@@ -775,3 +775,43 @@ class VendorsStream(squareStream):
                 "cursor" : next_page_token
             }
             return body
+    
+class RefundsStream(squareStream):
+    name = "refunds"
+    path = "/v2/refunds"
+    primary_keys = ["id"]
+    records_jsonpath = "$.refunds[*]"
+    replication_key = "updated_at"
+    schema = th.PropertiesList(
+        th.Property("id", th.StringType),
+        th.Property("status", th.StringType),
+        th.Property("amount_money", th.CustomType({"type": ["object", "string"]})),
+        th.Property("payment_id", th.StringType),
+        th.Property("order_id", th.StringType),
+        th.Property("order_id", th.StringType),
+        th.Property("created_at", th.DateTimeType),
+        th.Property("updated_at", th.DateTimeType),
+        th.Property("location_id", th.CustomType({"type": ["object", "string"]})),
+        th.Property("destination_type", th.StringType),
+    ).to_dict()
+
+class PayoutsStream(squareStream):
+    name = "payouts"
+    path = "/v2/payouts"
+    primary_keys = ["id"]
+    records_jsonpath = "$.payouts[*]"
+    replication_key = "updated_at"
+    schema = th.PropertiesList(
+        th.Property("id", th.StringType),
+        th.Property("status", th.StringType),
+        th.Property("location_id", th.StringType),
+        th.Property("created_at", th.DateTimeType),
+        th.Property("updated_at", th.DateTimeType),
+        th.Property("amount_money", th.CustomType({"type": ["object", "string"]})),
+        th.Property("destination", th.CustomType({"type": ["object", "string"]})),
+        th.Property("version", th.NumberType),
+        th.Property("type", th.StringType),
+        th.Property("arrival_date", th.StringType),
+        th.Property("end_to_end_id", th.StringType),
+    ).to_dict()
+
