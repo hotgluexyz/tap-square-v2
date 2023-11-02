@@ -49,11 +49,12 @@ class PaymentsStream(squareStream):
         th.Property('app_fee_money',money_type),
         th.Property('approved_money',money_type),
         th.Property(
-            'processing_fee',
+            'processing_fee',th.ArrayType(
             th.ObjectType(
                 th.Property('effective_at',th.DateTimeType),
                 th.Property('type',th.StringType),
                 th.Property('amount_money',money_type)
+            )
             )
         ),
         th.Property('refunded_money',money_type),
@@ -71,8 +72,8 @@ class PaymentsStream(squareStream):
                     th.ObjectType(
                         th.Property('card_brand',th.StringType),
                         th.Property('last_4',th.StringType),
-                        th.Property('exp_month',th.StringType),
-                        th.Property('exp_year',th.StringType),
+                        th.Property('exp_month',th.IntegerType),
+                        th.Property('exp_year',th.IntegerType),
                         th.Property('cardholder_name',th.StringType),
                         th.Property('billing_address',address_type),
                         th.Property('fingerprint',th.StringType),
