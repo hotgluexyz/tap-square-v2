@@ -57,6 +57,10 @@ class squareStream(RESTStream):
             A dictionary of HTTP headers.
         """
         headers = {}
+
+        if self.name == "inventory":
+            headers["Authorization"] = f"Bearer {self.config.get('access_token')}"
+
         if "user_agent" in self.config:
             headers["User-Agent"] = self.config.get("user_agent")
         return headers
