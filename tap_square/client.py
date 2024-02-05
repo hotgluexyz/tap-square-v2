@@ -26,16 +26,18 @@ from singer_sdk.authenticators import BearerTokenAuthenticator
 class squareStream(RESTStream):
     """square stream class."""
 
-   
+
     @property
     def url_base(self) -> str:
         """Return the API URL root, configurable via tap settings."""
-        return self.config["api_url"]
+        if self.config.get('is_sandbox'):
+            return 'https://connect.squareupsandbox.com'
+        return "https://connect.squareup.com"
 
     records_jsonpath = "$[*]"  # Or override `parse_response`.
     next_page_token_jsonpath = "$.cursor"  # Or override `get_next_page_token`.
 
-    
+
     @cached_property
     def authenticator(self) -> squareAuthenticator:
         """Return a new authenticator object.
