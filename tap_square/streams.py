@@ -432,7 +432,7 @@ class OrdersStream(squareStream):
                     th.Property("catalog_version", th.IntegerType)
                 )),
                 th.Property("note", th.StringType),
-                th.Property("applied_taxes", th.CustomType({"type": ["object", "string"]})),
+                th.Property("applied_taxes", th.CustomType({"type": ["array", "object", "string"]})),
                 th.Property("applied_discounts", th.CustomType({"type": ["array", "object", "string"]})),
                 th.Property("applied_service_charges", th.CustomType({"type": ["object", "string"]})),
                 th.Property("name", th.StringType),
