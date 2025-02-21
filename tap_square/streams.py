@@ -397,7 +397,7 @@ class SubscriptionsStream(squareStream):
         th.Property('created_at',th.DateTimeType),
         th.Property('card_id',th.StringType),
         th.Property('paid_until_date',th.StringType),
-        th.Property('timezone',th.DateTimeType),
+        th.Property('timezone',th.StringType),
         th.Property(
             'source',
             th.ObjectType(
@@ -707,8 +707,8 @@ class CatalogItemVariationCountsStream(squareStream):
         th.Property("catalog_object_id", th.StringType),
         th.Property("id", th.StringType),
         th.Property("catalog_object_type", th.StringType),
-        th.Property("state", th.DateTimeType),
-        th.Property("location_id", th.DateTimeType),
+        th.Property("state", th.StringType),
+        th.Property("location_id", th.StringType),
         th.Property("quantity", th.StringType),
         th.Property("calculated_at", th.DateTimeType),
         th.Property("is_estimated", th.BooleanType),
