@@ -129,3 +129,12 @@ class squareStream(RESTStream):
             if next_page_token:
                 payload['cursor'] = next_page_token
         return payload
+
+    def validate_response(self, response: requests.Response) -> None:
+        resp_json = response.json()
+        for error in resp_json.get("errors", []):
+            if error.get("code") == "INSUFFICIENT_SCOPES" and self.config.get("ignore_permission_errors", False):
+                self.logger.warning(error.get("detail", "Insufficient scopes for request."))
+                return
+
+        super().validate_response(response)
