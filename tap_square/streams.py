@@ -274,7 +274,6 @@ class LocationsStream(squareStream):
         }
 
 
-
 class InvoicesStream(squareStream):
     name = 'invoices'
     parent_stream_type = LocationsStream
@@ -405,6 +404,7 @@ class SubscriptionsStream(squareStream):
             )
         ),
     ).to_dict()
+
 
 class OrdersStream(squareStream):
     name = "orders"
@@ -587,6 +587,7 @@ class OrdersStream(squareStream):
                 })
             return body
 
+
 class CatalogStream(squareStream):
 
     name = "catalogs"
@@ -669,6 +670,7 @@ class CatalogStream(squareStream):
         else:
             return None  
 
+
 class CatalogItemVariationsStream(squareStream):
 
     name = "catalog_item_variations"
@@ -679,9 +681,11 @@ class CatalogItemVariationsStream(squareStream):
     schema = th.PropertiesList(
         th.Property("id", th.StringType),
     ).to_dict()
+
     def get_child_context(self, record: dict, context: Optional[dict]) -> dict:
         """Return a context dictionary for child streams."""
         return  {"catalog_object_id":record["id"]}
+    
     def get_records(self, context: Optional[dict]) -> Iterable[Dict[str, Any]]:
         records = None
         if context.get("item_data"):
@@ -695,17 +699,18 @@ class CatalogItemVariationsStream(squareStream):
                 continue
             self.prevous_items.append(transformed_record['id'])
             yield transformed_record.copy()
+
+
 class CatalogItemVariationCountsStream(squareStream):
 
     name = "catalog_item_variation_counts"
     path = "/v2/inventory/{catalog_object_id}"
-    primary_keys = ["id"]
+    primary_keys = ["catalog_object_id"]
     parent_stream_type = CatalogItemVariationsStream
     records_jsonpath = "$.counts[*]"
     
     schema = th.PropertiesList(
         th.Property("catalog_object_id", th.StringType),
-        th.Property("id", th.StringType),
         th.Property("catalog_object_type", th.StringType),
         th.Property("state", th.StringType),
         th.Property("location_id", th.StringType),
@@ -714,6 +719,7 @@ class CatalogItemVariationCountsStream(squareStream):
         th.Property("is_estimated", th.BooleanType),
     ).to_dict()   
 
+
 class CustomersStream(squareStream):
     name = "customers"
     path = "/v2/customers"
@@ -721,7 +727,6 @@ class CustomersStream(squareStream):
     primary_keys=["id"]
     replication_key = None 
     
-
     schema = th.PropertiesList(
         th.Property('id',th.StringType),
         th.Property('created_at',th.DateTimeType),
@@ -776,7 +781,8 @@ class VendorsStream(squareStream):
                 "cursor" : next_page_token
             }
             return body
-    
+
+
 class RefundsStream(squareStream):
     name = "refunds"
     path = "/v2/refunds"
@@ -795,6 +801,7 @@ class RefundsStream(squareStream):
         th.Property("location_id", th.CustomType({"type": ["object", "string"]})),
         th.Property("destination_type", th.StringType),
     ).to_dict()
+
 
 class PayoutsStream(squareStream):
     name = "payouts"
@@ -815,6 +822,7 @@ class PayoutsStream(squareStream):
         th.Property("arrival_date", th.StringType),
         th.Property("end_to_end_id", th.StringType),
     ).to_dict()
+
 
 class InventoryStream(squareStream):
     name = "inventory"
