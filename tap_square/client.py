@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import sys
+import backoff
 from pathlib import Path
 from typing import Any, Callable, Iterable, Optional
 
 import requests
+from singer_sdk.exceptions import FatalAPIError, RetriableAPIError
 from singer_sdk.helpers.jsonpath import extract_jsonpath
 from singer_sdk.streams import RESTStream
 
@@ -116,6 +118,22 @@ class squareStream(RESTStream):
             params["begin_time"] = start_date
         return params
 
+
+    def request_decorator(self, func: Callable) -> Callable:
+        decorator: Callable = backoff.on_exception(
+            backoff.expo,
+            (
+                RetriableAPIError,
+                requests.exceptions.ReadTimeout,
+                requests.exceptions.ConnectionError,
+                requests.exceptions.RequestException,
+                ConnectionRefusedError
+            ),
+            max_tries=7,
+            factor=2,
+        )(func)
+        return decorator
+    
     def prepare_request_payload(
         self,
         context: dict | None,
