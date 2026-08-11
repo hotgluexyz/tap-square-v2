@@ -47,3 +47,4 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.scripts]
 # CLI declaration
 tap-square-v2 = 'tap_square.tap:Tapsquare.cli'
+tap-square = 'tap_square.tap:Tapsquare.cli'
