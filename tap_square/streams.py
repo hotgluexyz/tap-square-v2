@@ -32,9 +32,74 @@ money_type = th.ObjectType(
         th.Property('currency',th.StringType),
     )
 
+class LocationsStream(squareStream):
+    name = "locations"
+    path = "/v2/locations"
+    records_jsonpath="$.locations[*]"
+    primary_keys=["id"]
+    replication_key = None 
+    
+
+    schema = th.PropertiesList(
+        th.Property('id',th.StringType),
+        th.Property('name',th.StringType),
+        th.Property('address',address_type),
+        th.Property('timezone',th.StringType),
+        th.Property('capabilities',th.ArrayType(th.StringType)),
+        th.Property('status',th.StringType),
+        th.Property('created_at',th.StringType),
+        th.Property('merchant_id',th.StringType),
+        th.Property('country',th.StringType),
+        th.Property('language_code',th.StringType),
+        th.Property('currency',th.StringType),
+        th.Property('phone_number',th.StringType),
+        th.Property('business_name',th.StringType),
+        th.Property('type',th.StringType),
+        th.Property('website_url',th.StringType),
+        th.Property(
+            'business_hours',
+            th.ObjectType(
+                th.Property('day_of_week',th.StringType),
+                th.Property('start_local_time',th.StringType),
+                th.Property('end_local_time',th.StringType),
+            )
+        ),
+        th.Property('business_email',th.StringType),
+        th.Property('description',th.StringType),
+        th.Property('twitter_username',th.StringType),
+        th.Property('instagram_username',th.StringType),
+        th.Property('facebook_url',th.StringType),
+        th.Property(
+            'coordinates',
+            th.ObjectType(
+                th.Property('latitude',th.NumberType),
+                th.Property('longitude',th.NumberType),
+            )
+        ),
+        th.Property('logo_url',th.StringType),
+        th.Property('pos_background_url',th.StringType),
+        th.Property('mcc',th.StringType),
+        th.Property('full_format_logo_url',th.StringType),
+        th.Property(
+            'tax_ids',
+            th.ObjectType(
+                th.Property('eu_vat',th.StringType),
+                th.Property('fr_siret',th.StringType),
+                th.Property('fr_naf',th.StringType),
+                th.Property('es_nif',th.StringType),
+            )
+        ),
+    ).to_dict()
+
+    def get_child_context(self, record, context): 
+        return { 
+            "location": record["id"]
+        }
+
 class PaymentsStream(squareStream):
     name = 'payments'
-    path = '/v2/payments'
+    parent_stream_type = LocationsStream
+    path = '/v2/payments?location_id={location}'
     primary_keys = ["id"]
     records_jsonpath = "$.payments[*]"
     replication_key = "created_at"
@@ -208,70 +273,6 @@ class PaymentsStream(squareStream):
         th.Property('version_token',th.StringType),
     ).to_dict()
 
-
-class LocationsStream(squareStream):
-    name = "locations"
-    path = "/v2/locations"
-    records_jsonpath="$.locations[*]"
-    primary_keys=["id"]
-    replication_key = None 
-    
-
-    schema = th.PropertiesList(
-        th.Property('id',th.StringType),
-        th.Property('name',th.StringType),
-        th.Property('address',address_type),
-        th.Property('timezone',th.StringType),
-        th.Property('capabilities',th.ArrayType(th.StringType)),
-        th.Property('status',th.StringType),
-        th.Property('created_at',th.StringType),
-        th.Property('merchant_id',th.StringType),
-        th.Property('country',th.StringType),
-        th.Property('language_code',th.StringType),
-        th.Property('currency',th.StringType),
-        th.Property('phone_number',th.StringType),
-        th.Property('business_name',th.StringType),
-        th.Property('type',th.StringType),
-        th.Property('website_url',th.StringType),
-        th.Property(
-            'business_hours',
-            th.ObjectType(
-                th.Property('day_of_week',th.StringType),
-                th.Property('start_local_time',th.StringType),
-                th.Property('end_local_time',th.StringType),
-            )
-        ),
-        th.Property('business_email',th.StringType),
-        th.Property('description',th.StringType),
-        th.Property('twitter_username',th.StringType),
-        th.Property('instagram_username',th.StringType),
-        th.Property('facebook_url',th.StringType),
-        th.Property(
-            'coordinates',
-            th.ObjectType(
-                th.Property('latitude',th.NumberType),
-                th.Property('longitude',th.NumberType),
-            )
-        ),
-        th.Property('logo_url',th.StringType),
-        th.Property('pos_background_url',th.StringType),
-        th.Property('mcc',th.StringType),
-        th.Property('full_format_logo_url',th.StringType),
-        th.Property(
-            'tax_ids',
-            th.ObjectType(
-                th.Property('eu_vat',th.StringType),
-                th.Property('fr_siret',th.StringType),
-                th.Property('fr_naf',th.StringType),
-                th.Property('es_nif',th.StringType),
-            )
-        ),
-    ).to_dict()
-
-    def get_child_context(self, record, context): 
-        return { 
-            "location": record["id"]
-        }
 
 
 class InvoicesStream(squareStream):
