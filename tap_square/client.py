@@ -114,7 +114,7 @@ class squareStream(RESTStream):
         
         start_date = self.get_starting_time(context)
         if self.replication_key and start_date:
-            start_date = start_date.strftime('%Y-%m-%dT%H:%M:%S.%f')
+            start_date = start_date.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
             params["begin_time"] = start_date
         return params
 
